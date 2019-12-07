@@ -1,0 +1,10 @@
+E:\VsProjects\YatesSimpleRenderer\YatesSimpleRenderer\YatesSimpleRenderer\bin\Debug\YatesSimpleRenderer.exe.config
+E:\VsProjects\YatesSimpleRenderer\YatesSimpleRenderer\YatesSimpleRenderer\bin\Debug\YatesSimpleRenderer.exe
+E:\VsProjects\YatesSimpleRenderer\YatesSimpleRenderer\YatesSimpleRenderer\bin\Debug\YatesSimpleRenderer.pdb
+E:\VsProjects\YatesSimpleRenderer\YatesSimpleRenderer\YatesSimpleRenderer\obj\Debug\YatesSimpleRenderer.csprojAssemblyReference.cache
+E:\VsProjects\YatesSimpleRenderer\YatesSimpleRenderer\YatesSimpleRenderer\obj\Debug\YatesSimpleRenderer.Properties.Resources.resources
+E:\VsProjects\YatesSimpleRenderer\YatesSimpleRenderer\YatesSimpleRenderer\obj\Debug\YatesSimpleRenderer.csproj.GenerateResource.cache
+E:\VsProjects\YatesSimpleRenderer\YatesSimpleRenderer\YatesSimpleRenderer\obj\Debug\YatesSimpleRenderer.csproj.CoreCompileInputs.cache
+E:\VsProjects\YatesSimpleRenderer\YatesSimpleRenderer\YatesSimpleRenderer\obj\Debug\YatesSimpleRenderer.exe
+E:\VsProjects\YatesSimpleRenderer\YatesSimpleRenderer\YatesSimpleRenderer\obj\Debug\YatesSimpleRenderer.pdb
+E:\VsProjects\YatesSimpleRenderer\YatesSimpleRenderer\YatesSimpleRenderer\obj\Debug\YatesSimpleRenderer.YatesSimpleRenderer.resources
