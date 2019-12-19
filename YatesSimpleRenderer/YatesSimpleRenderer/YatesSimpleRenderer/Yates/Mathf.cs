@@ -29,19 +29,27 @@ namespace YatesSimpleRenderer.Yates
         public static float Clamp(float value, float min, float max)
         {
             if ((double)value < (double)min)
+            {
                 value = min;
+            }               
             else if ((double)value > (double)max)
+            {
                 value = max;
-            return value;
+            }
+
+            return value;                       
         }
 
         public static float Clamp01(float value)
         {
-            if ((double)value < 0.0)
-                return 0.0f;
-            if ((double)value > 1.0)
-                return 1f;
-            return value;
+            return Clamp(value, 0.0f, 1f);
+        }
+
+        public static void Swap<T>(ref T x, ref T y)
+        {
+            T temp = x;
+            x = y;
+            y = temp;
         }
     }
 }
