@@ -43,7 +43,7 @@ namespace YatesSimpleRenderer
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <param name="color"></param>
-        private void DrawPoint(int x, int y, Color color)
+        public void DrawPoint(int x, int y, Color color)
         {
             this.frontBuffer.SetPixel(x, y, color);
         }
@@ -54,7 +54,7 @@ namespace YatesSimpleRenderer
         /// <param name="pointStart"></param>
         /// <param name="pointEnd"></param>
         /// <param name="color"></param>
-        private void DrawLine(Vector3 pointStart, Vector3 pointEnd, Color color)
+        public void DrawLine(Vector3 pointStart, Vector3 pointEnd, Color color)
         {
             int y1 = (int)pointStart.y;
             int x1 = (int)pointStart.x;
@@ -109,55 +109,71 @@ namespace YatesSimpleRenderer
         /// <param name="pointB"></param>
         /// <param name="pointC"></param>
         /// <param name="color"></param>
-        private void DrawTriangle(Vector3 pointA, Vector3 pointB, Vector3 pointC, Color color, bool wireframe = false)
+        public void DrawTriangle(Vector3[] points, Color color, bool wireframe = false)
         {
-            // 顶点根据y排序
-            if (pointA.y > pointB.y)
-            {
-                Mathf.Swap(ref pointA, ref pointB);
-            }
-
-            if (pointA.y > pointC.y)
-            {
-                Mathf.Swap(ref pointA, ref pointC);
-            }
-
-            if (pointB.y > pointC.y)
-            {
-                Mathf.Swap(ref pointB, ref pointC);
-            }
-
             if (wireframe)
             {
-                //线框模式
-                this.DrawLine(pointA, pointB, color);
-                this.DrawLine(pointB, pointC, color);
-                this.DrawLine(pointC, pointA, color);
+                this.DrawLine(points[0], points[1], color);
+                this.DrawLine(points[1], points[2], color);
+                this.DrawLine(points[2], points[0], color);
             }
             else
             {
-                // 将三角面分成上下两块来画
-                var acHeight = pointC.y - pointA.y + 1f;
-                var abHeight = pointB.y - pointA.y + 1f;
-                for (int y = (int)pointA.y; y <= (int)pointB.y; y++)
+                Vector3 bboxmin = new Vector3(this.frontBuffer.Width - 1, this.frontBuffer.Height - 1);
+                Vector3 bboxmax = Vector3.zero;
+                Vector3 clamp = new Vector3(this.frontBuffer.Width - 1, this.frontBuffer.Height - 1);
+                for (int i = 0; i < 3; i++)
                 {
-                    var dac = (y - pointA.y) / acHeight;
-                    var dab = (y - pointA.y) / abHeight;
-                    Vector3 a = pointA + ((pointC - pointA) * dac);
-                    Vector3 b = pointA + ((pointB - pointA) * dab);
-                    this.DrawLine(a, b, color);
+                    for (int j = 0; j < 2; j++)
+                    {
+                        bboxmin[j] = Math.Max(0, Math.Min(bboxmin[j], points[i][j]));
+                        bboxmax[j] = Math.Min(clamp[j], Math.Max(bboxmax[j], points[i][j]));
+                    }
                 }
 
-                var bcHeight = pointC.y - pointB.y + 1;
-                for (int y = (int)pointB.y; y <= (int)pointC.y; y++)
+                Vector3 p = default(Vector3);
+                for (p.x = bboxmin.x; p.x <= bboxmax.x; p.x++)
                 {
-                    var dac = (y - pointA.y) / acHeight;
-                    var dbc = (y - pointB.y) / bcHeight;
-                    Vector3 a = pointA + ((pointC - pointA) * dac);
-                    Vector3 b = pointB + ((pointC - pointB) * dbc);
-                    this.DrawLine(a, b, color);
+                    for (p.y = bboxmin.y; p.y <= bboxmax.y; p.y++)
+                    {
+                        if (this.IsPointInTriangle(points, p))
+                        {
+                            this.DrawPoint((int)p.x, (int)p.y, color);
+                        }
+                    }
                 }
-            }                    
+            }            
+        }
+
+        public bool IsPointInTriangle(Vector3[] points, Vector3 target)
+        {
+            Vector3 v0 = points[2] - points[0];
+            Vector3 v1 = points[1] - points[0];
+            Vector3 v2 = target - points[0];
+
+            float dot00 = Vector3.Dot(v0, v0);
+            float dot01 = Vector3.Dot(v0, v1);
+            float dot02 = Vector3.Dot(v0, v2);
+            float dot11 = Vector3.Dot(v1, v1);
+            float dot12 = Vector3.Dot(v1, v2);
+
+            float inverDeno = 1 / ((dot00 * dot11) - dot01 * dot01);
+
+            float u = (dot11 * dot02 - dot01 * dot12) * inverDeno;
+
+            if (u < 0 || u > 1) // if u out of range, return directly
+            {
+                return false;
+            }
+
+            float v = (dot00 * dot12 - dot01 * dot02) * inverDeno;
+
+            if (v < 0 || v > 1) // if v out of range, return directly
+            {
+                return false;
+            }
+
+            return u + v <= 1;
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -196,9 +212,15 @@ namespace YatesSimpleRenderer
                     this.DrawLine(new Vector3(400, 225), this.clickPoint, Color.White);
                 }
 
-                this.DrawTriangle(new Vector3(300, 50), new Vector3(250, 200), new Vector3(320, 160), Color.White);
-                this.DrawTriangle(new Vector3(400, 50), new Vector3(500, 200), new Vector3(550, 160), Color.Green);
-                this.DrawTriangle(new Vector3(550, 50), new Vector3(500, 100), new Vector3(600, 160), Color.Red);
+                this.DrawTriangle(
+                    new[] { new Vector3(300, 50), new Vector3(250, 200), new Vector3(320, 160) },
+                    Color.White);
+                this.DrawTriangle(
+                    new[] { new Vector3(400, 50), new Vector3(500, 200), new Vector3(550, 160) },
+                    Color.Green);
+                this.DrawTriangle(
+                    new[] { new Vector3(550, 50), new Vector3(500, 100), new Vector3(600, 160) },
+                    Color.Red);
 
                 this.screen.Clear(Color.Black);
                 this.screen.DrawImage(this.frontBuffer, 0, 0);
