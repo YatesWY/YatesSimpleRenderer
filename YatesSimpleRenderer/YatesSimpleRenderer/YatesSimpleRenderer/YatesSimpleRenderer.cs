@@ -18,6 +18,7 @@ namespace YatesSimpleRenderer
 {
     using System;
     using System.Drawing;
+    using System.Linq.Expressions;
     using System.Timers;
     using System.Windows.Forms;
 
@@ -30,6 +31,12 @@ namespace YatesSimpleRenderer
         private Bitmap frontBuffer;
 
         private Graphics screen;
+
+        private Model3D model;
+
+        private int width;
+
+        private int height;
 
         public YatesSimpleRenderer()
         {
@@ -45,7 +52,12 @@ namespace YatesSimpleRenderer
         /// <param name="color"></param>
         public void DrawPoint(int x, int y, Color color)
         {
-            this.frontBuffer.SetPixel(x, y, color);
+            if (x < 0 || y < 0 || x >= this.width || y >= this.height)
+            {
+                return;
+            }
+
+            this.frontBuffer.SetPixel(x, y, color);           
         }
 
         /// <summary>
@@ -119,9 +131,9 @@ namespace YatesSimpleRenderer
             }
             else
             {
-                Vector3 bboxmin = new Vector3(this.frontBuffer.Width - 1, this.frontBuffer.Height - 1);
+                Vector3 bboxmin = new Vector3(this.width - 1, this.height - 1);
                 Vector3 bboxmax = Vector3.zero;
-                Vector3 clamp = new Vector3(this.frontBuffer.Width - 1, this.frontBuffer.Height - 1);
+                Vector3 clamp = new Vector3(this.width - 1, this.height - 1);
                 for (int i = 0; i < 3; i++)
                 {
                     for (int j = 0; j < 2; j++)
@@ -190,14 +202,18 @@ namespace YatesSimpleRenderer
 
         private void Start()
         {
-            this.frontBuffer = new Bitmap(this.ClientSize.Width, this.ClientSize.Height);
-            this.backBuffer = new Bitmap(this.ClientSize.Width, this.ClientSize.Height);
+            this.model = ObjLoader.LoadModel(
+                @"E:\VsProjects\Yates\YatesSimpleRenderer\YatesSimpleRenderer\YatesSimpleRenderer\_obj\african_head.obj");
+            this.width = this.ClientSize.Width;
+            this.height = this.ClientSize.Height;
+            this.frontBuffer = new Bitmap(this.width, this.height);
+            this.backBuffer = new Bitmap(this.width, this.height);
             this.screen = this.CreateGraphics();
             var mainTimer = new System.Timers.Timer(1000 / 60f);
             mainTimer.Elapsed += new ElapsedEventHandler(this.Update);
             mainTimer.AutoReset = true;
             mainTimer.Enabled = true;
-            mainTimer.Start();
+            mainTimer.Start();          
         }
 
         private Vector3 clickPoint;
@@ -206,21 +222,31 @@ namespace YatesSimpleRenderer
         {
             // TODO double buffer
             lock (this.frontBuffer)
-            {
-                if (this.clickPoint != default(Vector3))
-                {
-                    this.DrawLine(new Vector3(400, 225), this.clickPoint, Color.White);
-                }
+            {               
+                //if (this.clickPoint != default(Vector3))
+                //{
+                //    this.DrawLine(new Vector3(400, 225), this.clickPoint, Color.White);
+                //}
 
-                this.DrawTriangle(
-                    new[] { new Vector3(300, 50), new Vector3(250, 200), new Vector3(320, 160) },
-                    Color.White);
-                this.DrawTriangle(
-                    new[] { new Vector3(400, 50), new Vector3(500, 200), new Vector3(550, 160) },
-                    Color.Green);
-                this.DrawTriangle(
-                    new[] { new Vector3(550, 50), new Vector3(500, 100), new Vector3(600, 160) },
-                    Color.Red);
+                //this.DrawTriangle(
+                //    new[] { new Vector3(300, 50), new Vector3(250, 200), new Vector3(320, 160) },
+                //    Color.White);
+                //this.DrawTriangle(
+                //    new[] { new Vector3(400, 50), new Vector3(500, 200), new Vector3(550, 160) },
+                //    Color.Green);
+                //this.DrawTriangle(
+                //    new[] { new Vector3(550, 50), new Vector3(500, 100), new Vector3(600, 160) },
+                //    Color.Red);
+
+                for (int i = 0; i < this.model.Vertices.Count; i++)
+                {
+                    var pos = this.model.Vertices[i].Pos;
+                    pos.x = (pos.x + 1) * this.width / 2;
+                    pos.y = this.height - (pos.y + 1) * this.height / 2;
+                    this.DrawPoint((int)pos.x, (int)pos.y, Color.White);
+                    //Console.WriteLine(this.model.Vertices[i].Pos);
+                    //this.DrawLine(this.model.Vertices[i].Pos, this.model.Vertices[i + 1].Pos, Color.White);
+                }
 
                 this.screen.Clear(Color.Black);
                 this.screen.DrawImage(this.frontBuffer, 0, 0);
