@@ -18,6 +18,7 @@ namespace YatesSimpleRenderer
 {
     using System;
     using System.Drawing;
+    using System.IO;
     using System.Linq.Expressions;
     using System.Timers;
     using System.Windows.Forms;
@@ -202,8 +203,9 @@ namespace YatesSimpleRenderer
 
         private void Start()
         {
+            
             this.model = ObjLoader.LoadModel(
-                @"E:\VsProjects\Yates\YatesSimpleRenderer\YatesSimpleRenderer\YatesSimpleRenderer\_obj\african_head.obj");
+                @"..\_obj\african_head.obj");
             this.width = this.ClientSize.Width;
             this.height = this.ClientSize.Height;
             this.frontBuffer = new Bitmap(this.width, this.height);
@@ -251,15 +253,26 @@ namespace YatesSimpleRenderer
                 for (int i = 0; i < this.model.Faces.Count; i++)
                 {
                     var face = this.model.Faces[i];
-                    Vector3[] posVector3s = new Vector3[3];
-                    for (int j = 0; j < posVector3s.Length; j++)
+                    Vector3[] screenPoints = new Vector3[3];
+                    Vector3[] worldPoints = new Vector3[3]; 
+                    for (int j = 0; j < screenPoints.Length; j++)
                     {
-                        posVector3s[j] = face.Vertices[j].Pos;
-                        posVector3s[j].x = (posVector3s[j].x + 1) * this.width / 2;
-                        posVector3s[j].y = this.height - (posVector3s[j].y + 1) * this.height / 2;
+                        worldPoints[j] = face.Vertices[j].Pos;
+                        screenPoints[j].x = (worldPoints[j].x + 1) * this.width / 2;
+                        screenPoints[j].y = this.height - (worldPoints[j].y + 1) * this.height / 2;
                     }
 
-                    this.DrawTriangle(posVector3s, Color.White, true);
+                    // 求三角面法线方向
+                    var n = Vector3.Cross(worldPoints[2] - worldPoints[0], worldPoints[1] - worldPoints[0]).normalized;
+                    var lightDir = Vector3.back;
+                    var intensity = Vector3.Dot(n, lightDir.normalized);
+                    if (intensity < 0)
+                    {
+                        // 剔除掉点积为负的面
+                        continue;
+                    }
+
+                    this.DrawTriangle(screenPoints, Color.FromArgb(255, (int)(intensity * 255), (int)(intensity * 255), (int)(intensity * 255)));
                 }
 
                 this.screen.Clear(Color.Black);
