@@ -11,15 +11,8 @@ namespace YatesSimpleRenderer.Yates
 
     class Model3D
     {
-        private List<Vertex> vertices = new List<Vertex>();
-
-        public List<Vertex> Vertices
-        {
-            get
-            {
-                return this.vertices;
-            }
-        }
+        private List<Vertex> vertices = new List<Vertex>(64);
+        private List<Face> faces = new List<Face>(64);
 
         public Model3D(StreamReader stream)
         {
@@ -31,13 +24,22 @@ namespace YatesSimpleRenderer.Yates
                 {
                     switch (splits[0])
                     {
+                        // 顶点位置
                         case "v":
                             var pos = new Vector3(float.Parse(splits[1]), float.Parse(splits[2]), float.Parse(splits[3]));
                             this.vertices.Add(new Vertex(pos));
-                            break;                           
+                            break;
+                        // 面
+                        case "f":
+                            this.faces.Add(new Face(this, new string[] { splits[1], splits[2], splits[3] }));
+                            break;
                     }
                 }
             }
         }
+
+        public List<Vertex> Vertices => this.vertices;
+
+        public List<Face> Faces => this.faces;
     }
 }

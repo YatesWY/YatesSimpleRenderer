@@ -122,7 +122,7 @@ namespace YatesSimpleRenderer
         /// <param name="pointC"></param>
         /// <param name="color"></param>
         public void DrawTriangle(Vector3[] points, Color color, bool wireframe = false)
-        {
+        {           
             if (wireframe)
             {
                 this.DrawLine(points[0], points[1], color);
@@ -238,14 +238,28 @@ namespace YatesSimpleRenderer
                 //    new[] { new Vector3(550, 50), new Vector3(500, 100), new Vector3(600, 160) },
                 //    Color.Red);
 
-                for (int i = 0; i < this.model.Vertices.Count; i++)
+                //for (int i = 0; i < this.model.Vertices.Count; i++)
+                //{
+                //    var pos = this.model.Vertices[i].Pos;
+                //    pos.x = (pos.x + 1) * this.width / 2;
+                //    pos.y = this.height - (pos.y + 1) * this.height / 2;
+                //    this.DrawPoint((int)pos.x, (int)pos.y, Color.White);
+                //    //Console.WriteLine(this.model.Vertices[i].Pos);
+                //    //this.DrawLine(this.model.Vertices[i].Pos, this.model.Vertices[i + 1].Pos, Color.White);
+                //}
+
+                for (int i = 0; i < this.model.Faces.Count; i++)
                 {
-                    var pos = this.model.Vertices[i].Pos;
-                    pos.x = (pos.x + 1) * this.width / 2;
-                    pos.y = this.height - (pos.y + 1) * this.height / 2;
-                    this.DrawPoint((int)pos.x, (int)pos.y, Color.White);
-                    //Console.WriteLine(this.model.Vertices[i].Pos);
-                    //this.DrawLine(this.model.Vertices[i].Pos, this.model.Vertices[i + 1].Pos, Color.White);
+                    var face = this.model.Faces[i];
+                    Vector3[] posVector3s = new Vector3[3];
+                    for (int j = 0; j < posVector3s.Length; j++)
+                    {
+                        posVector3s[j] = face.Vertices[j].Pos;
+                        posVector3s[j].x = (posVector3s[j].x + 1) * this.width / 2;
+                        posVector3s[j].y = this.height - (posVector3s[j].y + 1) * this.height / 2;
+                    }
+
+                    this.DrawTriangle(posVector3s, Color.White, true);
                 }
 
                 this.screen.Clear(Color.Black);
