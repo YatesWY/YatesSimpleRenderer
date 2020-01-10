@@ -31,16 +31,6 @@
             this.label1 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(1, -1);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(5, 24);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "\r\n\r\n";
-            this.label1.Click += new System.EventHandler(this.label1_Click);
-            // 
             // YatesSimpleRenderer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -49,7 +39,6 @@
             this.Controls.Add(this.label1);
             this.Name = "YatesSimpleRenderer";
             this.Text = "Form1";
-            this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.YatesSimpleRenderer_MouseClick);
             this.ResumeLayout(false);
             this.PerformLayout();
 

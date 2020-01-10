@@ -18,8 +18,6 @@ namespace YatesSimpleRenderer
 {
     using System;
     using System.Drawing;
-    using System.IO;
-    using System.Linq.Expressions;
     using System.Timers;
     using System.Windows.Forms;
 
@@ -27,13 +25,13 @@ namespace YatesSimpleRenderer
 
     public partial class YatesSimpleRenderer : Form
     {
-        private Bitmap backBuffer;
-
         private Bitmap frontBuffer;
 
         private Graphics screen;
 
         private Model3D model;
+
+        private float[] zBuffer;
 
         private int width;
 
@@ -149,8 +147,9 @@ namespace YatesSimpleRenderer
                 {
                     for (p.y = bboxmin.y; p.y <= bboxmax.y; p.y++)
                     {
-                        if (this.IsPointInTriangle(points, p))
+                        if (this.IsPointInTriangle(points, p) && this.zBuffer[(int)p.x + ((int)p.y * this.width)] < p.z)
                         {
+                            this.zBuffer[(int)p.x + ((int)p.y * this.width)] = p.z;
                             this.DrawPoint((int)p.x, (int)p.y, color);
                         }
                     }
@@ -189,18 +188,6 @@ namespace YatesSimpleRenderer
             return u + v <= 1;
         }
 
-        private void label1_Click(object sender, EventArgs e)
-        {
-        }
-
-        private void Log(string msg)
-        {
-            lock (this.label1)
-            {
-                this.label1.Text = msg;
-            }
-        }
-
         private void Start()
         {
             
@@ -209,8 +196,8 @@ namespace YatesSimpleRenderer
             this.width = this.ClientSize.Width;
             this.height = this.ClientSize.Height;
             this.frontBuffer = new Bitmap(this.width, this.height);
-            this.backBuffer = new Bitmap(this.width, this.height);
             this.screen = this.CreateGraphics();
+            this.zBuffer = new float[this.width * this.height];
             var mainTimer = new System.Timers.Timer(1000 / 60f);
             mainTimer.Elapsed += new ElapsedEventHandler(this.Update);
             mainTimer.AutoReset = true;
@@ -218,38 +205,19 @@ namespace YatesSimpleRenderer
             mainTimer.Start();          
         }
 
-        private Vector3 clickPoint;
+        private void ClearBuffer()
+        {
+            for (int i = 0; i < this.zBuffer.Length; i++)
+            {
+                this.zBuffer[i] = float.MinValue;
+            }
+        }
 
         private void Update(object sender, ElapsedEventArgs e)
         {
-            // TODO double buffer
             lock (this.frontBuffer)
-            {               
-                //if (this.clickPoint != default(Vector3))
-                //{
-                //    this.DrawLine(new Vector3(400, 225), this.clickPoint, Color.White);
-                //}
-
-                //this.DrawTriangle(
-                //    new[] { new Vector3(300, 50), new Vector3(250, 200), new Vector3(320, 160) },
-                //    Color.White);
-                //this.DrawTriangle(
-                //    new[] { new Vector3(400, 50), new Vector3(500, 200), new Vector3(550, 160) },
-                //    Color.Green);
-                //this.DrawTriangle(
-                //    new[] { new Vector3(550, 50), new Vector3(500, 100), new Vector3(600, 160) },
-                //    Color.Red);
-
-                //for (int i = 0; i < this.model.Vertices.Count; i++)
-                //{
-                //    var pos = this.model.Vertices[i].Pos;
-                //    pos.x = (pos.x + 1) * this.width / 2;
-                //    pos.y = this.height - (pos.y + 1) * this.height / 2;
-                //    this.DrawPoint((int)pos.x, (int)pos.y, Color.White);
-                //    //Console.WriteLine(this.model.Vertices[i].Pos);
-                //    //this.DrawLine(this.model.Vertices[i].Pos, this.model.Vertices[i + 1].Pos, Color.White);
-                //}
-
+            {          
+                this.ClearBuffer();
                 for (int i = 0; i < this.model.Faces.Count; i++)
                 {
                     var face = this.model.Faces[i];
@@ -259,7 +227,8 @@ namespace YatesSimpleRenderer
                     {
                         worldPoints[j] = face.Vertices[j].Pos;
                         screenPoints[j].x = (worldPoints[j].x + 1) * this.width / 2;
-                        screenPoints[j].y = this.height - (worldPoints[j].y + 1) * this.height / 2;
+                        screenPoints[j].y = this.height - ((worldPoints[j].y + 1) * this.height / 2);
+                        screenPoints[j].z = worldPoints[j].z;
                     }
 
                     // 求三角面法线方向
@@ -278,11 +247,6 @@ namespace YatesSimpleRenderer
                 this.screen.Clear(Color.Black);
                 this.screen.DrawImage(this.frontBuffer, 0, 0);
             }           
-        }
-
-        private void YatesSimpleRenderer_MouseClick(object sender, MouseEventArgs e)
-        {
-           this.clickPoint = new Vector3(e.Location.X, e.Location.Y);
         }
     }
 }
