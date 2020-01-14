@@ -130,9 +130,9 @@ namespace YatesSimpleRenderer
             }
             else
             {
-                Vector3 bboxmin = new Vector3(this.width - 1, this.height - 1);
-                Vector3 bboxmax = Vector3.zero;
-                Vector3 clamp = new Vector3(this.width - 1, this.height - 1);
+                var bboxmin = new Vector3(this.width - 1, this.height - 1);
+                var bboxmax = Vector3.zero;
+                var clamp = new Vector3(this.width - 1, this.height - 1);
                 for (int i = 0; i < 3; i++)
                 {
                     for (int j = 0; j < 2; j++)
@@ -142,19 +142,57 @@ namespace YatesSimpleRenderer
                     }
                 }
 
-                Vector3 p = default(Vector3);
-                for (p.x = bboxmin.x; p.x <= bboxmax.x; p.x++)
+                for (int x = (int)bboxmin.x; x <= bboxmax.x; x++)
                 {
-                    for (p.y = bboxmin.y; p.y <= bboxmax.y; p.y++)
+                    for (int y = (int)bboxmin.y; y <= bboxmax.y; y++)
                     {
-                        if (this.IsPointInTriangle(points, p) && this.zBuffer[(int)p.x + ((int)p.y * this.width)] < p.z)
+                        var bcPos = this.Barycentric(points, x, y);
+                        if (bcPos.x < 0 || bcPos.y < 0 || bcPos.z < 0)
                         {
-                            this.zBuffer[(int)p.x + ((int)p.y * this.width)] = p.z;
-                            this.DrawPoint((int)p.x, (int)p.y, color);
+                            continue;
+                        }
+
+                        float z = 0;
+                        for (int i = 0; i < 3; i++)
+                        {
+                            z += points[i].z * bcPos[i];
+                        }
+
+                        if (this.zBuffer[x + (y * this.width)] < z)
+                        {
+                            this.zBuffer[x + (y * this.width)] = z;
+                            this.DrawPoint(x, y, color);
                         }
                     }
                 }
             }            
+        }
+
+        /// <summary>
+        /// 求P点基于三角形重心坐标系的坐标
+        /// 1.AP = uAB + vAC --> uAB + vAC +PA = 0
+        /// --> 矩阵(u,v,1)(ABx,ACx,PAx)T = 0,矩阵(u,v,1)(ABy,ACy,PAy)T = 0
+        /// --> (u,v,1)同时与两个向量垂直,即求两个向量叉乘结果uv1(如果uv1.z不等于1则点P不在三角形内)
+        /// 2.aAP = bAB + cAC
+        /// --> a(A - P) = b(A - B) + c(A - C)
+        /// --> P = (1 - b/a - c/a)A + b/aB + c/aC
+        /// --> P的重心坐标((1 - b/a - c/a), b/a, c/a)
+        /// </summary>
+        /// <returns></returns>
+        public Vector3 Barycentric(Vector3[] points, int targetX, int targetY)
+        {
+            var uv1 = Vector3.Cross(
+                new Vector3(points[2].x - points[0].x, points[1].x - points[0].x, points[0].x - targetX),
+                new Vector3(points[2].y - points[0].y, points[1].y - points[0].y, points[0].y - targetY));
+            if (Math.Abs(uv1.z) < 0.0001f)
+            {
+                // 0不能做分母,其中任意一个参数为负说明不在三角形内,会被剔除
+                return Vector3.left;
+            }
+            else
+            {
+                return new Vector3(1 - ((uv1.x + uv1.y) / uv1.z), uv1.x / uv1.z, uv1.y / uv1.z);
+            }
         }
 
         public bool IsPointInTriangle(Vector3[] points, Vector3 target)
@@ -188,6 +226,8 @@ namespace YatesSimpleRenderer
             return u + v <= 1;
         }
 
+        private Random rand;
+
         private void Start()
         {
             
@@ -199,6 +239,7 @@ namespace YatesSimpleRenderer
             this.screen = this.CreateGraphics();
             this.zBuffer = new float[this.width * this.height];
             var mainTimer = new System.Timers.Timer(1000 / 60f);
+            this.rand = new Random();
             mainTimer.Elapsed += new ElapsedEventHandler(this.Update);
             mainTimer.AutoReset = true;
             mainTimer.Enabled = true;
@@ -234,6 +275,7 @@ namespace YatesSimpleRenderer
                     // 求三角面法线方向
                     var n = Vector3.Cross(worldPoints[2] - worldPoints[0], worldPoints[1] - worldPoints[0]).normalized;
                     var lightDir = Vector3.back;
+                    //var lightDir = new Vector3(0, -1, -1);
                     var intensity = Vector3.Dot(n, lightDir.normalized);
                     if (intensity < 0)
                     {
