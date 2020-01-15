@@ -184,7 +184,7 @@ namespace YatesSimpleRenderer
             var uv1 = Vector3.Cross(
                 new Vector3(points[2].x - points[0].x, points[1].x - points[0].x, points[0].x - targetX),
                 new Vector3(points[2].y - points[0].y, points[1].y - points[0].y, points[0].y - targetY));
-            if (Math.Abs(uv1.z) < 0.0001f)
+            if (Math.Abs(uv1.z) < float.Epsilon)
             {
                 // 0不能做分母,其中任意一个参数为负说明不在三角形内,会被剔除
                 return Vector3.left;
@@ -194,39 +194,6 @@ namespace YatesSimpleRenderer
                 return new Vector3(1 - ((uv1.x + uv1.y) / uv1.z), uv1.x / uv1.z, uv1.y / uv1.z);
             }
         }
-
-        public bool IsPointInTriangle(Vector3[] points, Vector3 target)
-        {
-            Vector3 v0 = points[2] - points[0];
-            Vector3 v1 = points[1] - points[0];
-            Vector3 v2 = target - points[0];
-
-            float dot00 = Vector3.Dot(v0, v0);
-            float dot01 = Vector3.Dot(v0, v1);
-            float dot02 = Vector3.Dot(v0, v2);
-            float dot11 = Vector3.Dot(v1, v1);
-            float dot12 = Vector3.Dot(v1, v2);
-
-            float inverDeno = 1 / ((dot00 * dot11) - dot01 * dot01);
-
-            float u = (dot11 * dot02 - dot01 * dot12) * inverDeno;
-
-            if (u < 0 || u > 1) // if u out of range, return directly
-            {
-                return false;
-            }
-
-            float v = (dot00 * dot12 - dot01 * dot02) * inverDeno;
-
-            if (v < 0 || v > 1) // if v out of range, return directly
-            {
-                return false;
-            }
-
-            return u + v <= 1;
-        }
-
-        private Random rand;
 
         private void Start()
         {
@@ -239,7 +206,6 @@ namespace YatesSimpleRenderer
             this.screen = this.CreateGraphics();
             this.zBuffer = new float[this.width * this.height];
             var mainTimer = new System.Timers.Timer(1000 / 60f);
-            this.rand = new Random();
             mainTimer.Elapsed += new ElapsedEventHandler(this.Update);
             mainTimer.AutoReset = true;
             mainTimer.Enabled = true;
@@ -275,7 +241,6 @@ namespace YatesSimpleRenderer
                     // 求三角面法线方向
                     var n = Vector3.Cross(worldPoints[2] - worldPoints[0], worldPoints[1] - worldPoints[0]).normalized;
                     var lightDir = Vector3.back;
-                    //var lightDir = new Vector3(0, -1, -1);
                     var intensity = Vector3.Dot(n, lightDir.normalized);
                     if (intensity < 0)
                     {

@@ -56,9 +56,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Yates\Face.cs" />
     <Compile Include="Yates\Mathf.cs" />
+    <Compile Include="Yates\Matrix4x4.cs" />
     <Compile Include="Yates\Model3D.cs" />
     <Compile Include="Yates\ObjLoader.cs" />
+    <Compile Include="Yates\Quaternion.cs" />
     <Compile Include="Yates\Vector3.cs" />
+    <Compile Include="Yates\Vector4.cs" />
     <Compile Include="Yates\Vertex.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
